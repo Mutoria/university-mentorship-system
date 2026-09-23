@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role
+  avatarInitials String
+  avatarColor   String   @default("bg-indigo")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  studentProfile StudentProfile?
+  mentorProfile  MentorProfile?
+
+  notifications  Notification[]
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model StudentProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   String
+  yearOfStudy  String
+  bio          String   @default("")
+  interests    String[]
+
+  requestsSent MentorshipRequest[] @relation("StudentRequests")
+  goals        Goal[]
+  reviews      Review[]
+}
+
+model MentorProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String
+  department         String
+  bio                String   @default("")
+  expertise          String[]
+  verified           Boolean  @default(false)
+  sessionsCompleted  Int      @default(0)
+
+  availability       AvailabilitySlot[]
+  requestsReceived   MentorshipRequest[] @relation("MentorRequests")
+  reviews            Review[]
+}
+
+model AvailabilitySlot {
+  id            String   @id @default(cuid())
+  mentorId      String
+  mentor        MentorProfile @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  dayOfWeek     Int
+  startTime     String
+  endTime       String
+}
+
+model MentorshipRequest {
+  id            String        @id @default(cuid())
+  studentId     String
+  student       StudentProfile @relation("StudentRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  mentorId      String
+  mentor        MentorProfile  @relation("MentorRequests", fields: [mentorId], references: [id], onDelete: Cascade)
+  message       String
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  sessions      MentorshipSession[]
+  goals         Goal[]
+}
+
+model MentorshipSession {
+  id            String        @id @default(cuid())
+  requestId     String
+  request       MentorshipRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  scheduledAt   DateTime
+  durationMins  Int           @default(30)
+  status        SessionStatus @default(SCHEDULED)
+  notes         String        @default("")
+  createdAt     DateTime      @default(now())
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  senderId     String
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId   String
+  receiver     User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content      String
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model Goal {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  requestId     String?
+  request       MentorshipRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  title         String
+  description   String   @default("")
+  targetDate    DateTime?
+  completed     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  progressUpdates GoalProgress[]
+}
+
+model GoalProgress {
+  id          String   @id @default(cuid())
+  goalId      String
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  note        String
+  percentage  Int
+  createdAt   DateTime @default(now())
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  mentorId      String
+  mentor        MentorProfile  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String   @default("")
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  createdAt   DateTime @default(now())
+}
