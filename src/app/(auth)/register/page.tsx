@@ -1,45 +1,55 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { GraduationCap, User, Mail, Lock } from "lucide-react";
+import { GraduationCap, User, Mail, Lock, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 
 function RegisterForm() {
+  const router = useRouter();
   const params = useSearchParams();
   const { showToast } = useToast();
-  const defaultRole = params.get("role") ?? "student";
+  const roleParam = params.get("role");
+  const defaultRole = roleParam === "mentor" ? "mentor" : "student";
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const name = String(form.get("name") ?? "");
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
+    const department = String(form.get("department") ?? "");
+    const role = String(form.get("role") ?? "student");
     const nextErrors: Record<string, string> = {};
 
     if (name.trim().length < 2) nextErrors.name = "Enter your full name";
     if (!/^\S+@\S+\.\S+$/.test(email)) nextErrors.email = "Enter a valid email address";
-    if (password.length < 6)
-      nextErrors.password = "Password must be at least 6 characters";
+    if (password.length < 8) nextErrors.password = "Password must be at least 8 characters";
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      showToast(
-        "Account creation connects to the database on Day 2 — this is UI-only for now.",
-        "success"
-      );
-    }, 900);
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role, department }),
+    });
+    setIsLoading(false);
+
+    if (res.ok) {
+      showToast("Account created! Please log in.", "success");
+      router.push("/login");
+    } else {
+      const data = await res.json();
+      showToast(data.error ?? "Something went wrong", "error");
+    }
   }
 
   return (
@@ -88,10 +98,16 @@ function RegisterForm() {
             name="password"
             type="password"
             label="Password"
-            placeholder="At least 6 characters"
+            placeholder="At least 8 characters"
             icon={<Lock className="h-4 w-4" />}
             error={errors.password}
             autoComplete="new-password"
+          />
+          <Input
+            name="department"
+            label="Department"
+            placeholder="e.g. Computer Science"
+            icon={<Building2 className="h-4 w-4" />}
           />
           <Select
             name="role"
@@ -100,7 +116,6 @@ function RegisterForm() {
             options={[
               { label: "Student", value: "student" },
               { label: "Mentor", value: "mentor" },
-              { label: "Administrator", value: "admin" },
             ]}
           />
 

@@ -12,8 +12,12 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const result = await prisma.availabilitySlot.deleteMany({
+    where: { id, mentor: { userId: session.user.id } },
+  });
 
-  await prisma.availabilitySlot.delete({ where: { id } });
-
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Slot not found" }, { status: 404 });
+  }
   return NextResponse.json({ success: true });
 }

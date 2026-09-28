@@ -9,13 +9,21 @@ export async function POST(request: Request) {
   }
 
   const { requestId, scheduledAt, durationMins } = await request.json();
+  const when = new Date(scheduledAt);
+  if (isNaN(when.getTime()) || when.getTime() < Date.now()) {
+    return NextResponse.json({ error: "Choose a future date" }, { status: 400 });
+  }
 
-  const mentorshipRequest = await prisma.mentorshipRequest.findUnique({
-    where: { id: requestId },
-    include: { student: true },
+  const mentorshipRequest = await prisma.mentorshipRequest.findFirst({
+    where: {
+      id: requestId,
+      status: "ACCEPTED",
+      student: { userId: session.user.id },
+    },
+    include: { mentor: true },
   });
 
-  if (!mentorshipRequest || mentorshipRequest.status !== "ACCEPTED") {
+  if (!mentorshipRequest) {
     return NextResponse.json(
       { error: "This mentorship is not active" },
       { status: 400 }
@@ -25,27 +33,19 @@ export async function POST(request: Request) {
   const newSession = await prisma.mentorshipSession.create({
     data: {
       requestId,
-      scheduledAt: new Date(scheduledAt),
+      scheduledAt: when,
       durationMins: Number(durationMins) || 30,
       status: "SCHEDULED",
     },
   });
 
-  const mentorProfile = await prisma.mentorProfile.findUnique({
-    where: { id: mentorshipRequest.mentorId },
+  await prisma.notification.create({
+    data: {
+      userId: mentorshipRequest.mentor.userId,
+      title: "New session booked",
+      message: `A session has been booked for ${when.toLocaleDateString()}.`,
+    },
   });
-
-  if (mentorProfile) {
-    await prisma.notification.create({
-      data: {
-        userId: mentorProfile.userId,
-        title: "New session booked",
-        message: `A session has been booked for ${new Date(
-          scheduledAt
-        ).toLocaleDateString()}.`,
-      },
-    });
-  }
 
   return NextResponse.json(newSession);
 }
