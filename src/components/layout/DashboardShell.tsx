@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Megaphone,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 const navByRole = {
   STUDENT: [
     { label: "Dashboard", href: "/student", icon: LayoutDashboard },
+    { label: "AI Match", href: "/student/matches", icon: Sparkles },
     { label: "Find Mentors", href: "/student/mentors", icon: Search },
     { label: "My Requests", href: "/student/requests", icon: Send },
     { label: "Messages", href: "/student/messages", icon: MessageSquare },
@@ -65,7 +67,6 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-background dark:bg-navy">
-      {/* Desktop sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col border-r border-slate-border dark:border-white/10 bg-surface dark:bg-navy-light">
         <div className="flex h-16 items-center gap-2 px-6 border-b border-slate-border dark:border-white/10">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo text-white">
@@ -106,7 +107,6 @@ export function DashboardShell({
         </div>
       </aside>
 
-      {/* Mobile top bar */}
       <div className="lg:pl-64">
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-border dark:border-white/10 bg-surface/80 dark:bg-navy/80 backdrop-blur-md px-4 sm:px-6">
           <button
