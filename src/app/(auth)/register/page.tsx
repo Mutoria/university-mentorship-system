@@ -14,7 +14,9 @@ function RegisterForm() {
   const params = useSearchParams();
   const { showToast } = useToast();
   const roleParam = params.get("role");
-  const defaultRole = roleParam === "mentor" ? "mentor" : "student";
+  const [role, setRole] = useState(
+    roleParam === "mentor" || roleParam === "company" ? roleParam : "student"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -25,12 +27,15 @@ function RegisterForm() {
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
     const department = String(form.get("department") ?? "");
-    const role = String(form.get("role") ?? "student");
+    const companyName = String(form.get("companyName") ?? "");
     const nextErrors: Record<string, string> = {};
 
     if (name.trim().length < 2) nextErrors.name = "Enter your full name";
     if (!/^\S+@\S+\.\S+$/.test(email)) nextErrors.email = "Enter a valid email address";
     if (password.length < 8) nextErrors.password = "Password must be at least 8 characters";
+    if (role === "company" && companyName.trim().length < 2) {
+      nextErrors.companyName = "Enter your company name";
+    }
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -39,7 +44,7 @@ function RegisterForm() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role, department }),
+      body: JSON.stringify({ name, email, password, role, department, companyName }),
     });
     setIsLoading(false);
 
@@ -47,7 +52,7 @@ function RegisterForm() {
       showToast("Account created! Please log in.", "success");
       router.push("/login");
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       showToast(data.error ?? "Something went wrong", "error");
     }
   }
@@ -68,7 +73,7 @@ function RegisterForm() {
             Create your account
           </h1>
           <p className="mt-2 text-sm text-slate">
-            Join as a {defaultRole} in under a minute.
+            Join as a {role} in under a minute.
           </p>
         </div>
 
@@ -77,14 +82,34 @@ function RegisterForm() {
           noValidate
           className="mt-8 space-y-4 rounded-xl2 border border-slate-border dark:border-white/10 bg-surface dark:bg-navy-light p-6 shadow-card sm:p-8"
         >
+          <Select
+            name="role"
+            label="I am joining as a"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            options={[
+              { label: "Student", value: "student" },
+              { label: "Mentor", value: "mentor" },
+              { label: "Company", value: "company" },
+            ]}
+          />
           <Input
             name="name"
-            label="Full name"
+            label={role === "company" ? "Your full name (contact person)" : "Full name"}
             placeholder="Jane Wanjiku"
             icon={<User className="h-4 w-4" />}
             error={errors.name}
             autoComplete="name"
           />
+          {role === "company" && (
+            <Input
+              name="companyName"
+              label="Company name"
+              placeholder="e.g. Safaricom PLC"
+              icon={<Building2 className="h-4 w-4" />}
+              error={errors.companyName}
+            />
+          )}
           <Input
             name="email"
             type="email"
@@ -103,21 +128,14 @@ function RegisterForm() {
             error={errors.password}
             autoComplete="new-password"
           />
-          <Input
-            name="department"
-            label="Department"
-            placeholder="e.g. Computer Science"
-            icon={<Building2 className="h-4 w-4" />}
-          />
-          <Select
-            name="role"
-            label="I am joining as a"
-            defaultValue={defaultRole}
-            options={[
-              { label: "Student", value: "student" },
-              { label: "Mentor", value: "mentor" },
-            ]}
-          />
+          {role !== "company" && (
+            <Input
+              name="department"
+              label="Department"
+              placeholder="e.g. Computer Science"
+              icon={<Building2 className="h-4 w-4" />}
+            />
+          )}
 
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Create account

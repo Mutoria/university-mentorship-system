@@ -4,14 +4,14 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: "STUDENT" | "MENTOR" | "ADMIN";
+      role: "STUDENT" | "MENTOR" | "ADMIN" | "COMPANY";
       avatarInitials: string;
       avatarColor: string;
     } & DefaultSession["user"];
   }
 
   interface User {
-    role: "STUDENT" | "MENTOR" | "ADMIN";
+    role: "STUDENT" | "MENTOR" | "ADMIN" | "COMPANY";
     avatarInitials: string;
     avatarColor: string;
   }
@@ -20,7 +20,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: "STUDENT" | "MENTOR" | "ADMIN";
+    role: "STUDENT" | "MENTOR" | "ADMIN" | "COMPANY";
     avatarInitials: string;
     avatarColor: string;
   }

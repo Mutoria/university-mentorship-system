@@ -101,3 +101,17 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+}

@@ -11,6 +11,8 @@ enum Role {
   STUDENT
   MENTOR
   ADMIN
+
+  COMPANY
 }
 
 enum RequestStatus {
@@ -38,6 +40,8 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   studentProfile StudentProfile?
+  companyProfile CompanyProfile?
+  opportunities  Opportunity[]
   mentorProfile  MentorProfile?
 
   notifications  Notification[]
@@ -56,6 +60,9 @@ model StudentProfile {
   interests    String[]
 
   requestsSent MentorshipRequest[] @relation("StudentRequests")
+  cv           CvProfile?
+  portfolio    PortfolioProject[]
+  applications Application[]
   goals        Goal[]
   reviews      Review[]
 }
@@ -172,4 +179,87 @@ model Announcement {
   title       String
   content     String
   createdAt   DateTime @default(now())
+}
+enum OpportunityType {
+  JOB
+  MENTORSHIP
+}
+
+enum EmploymentType {
+  PART_TIME
+  FULL_TIME
+  INTERNSHIP
+}
+
+enum ApplicationStatus {
+  UNDER_VERIFICATION
+  SHORTLISTED
+  NOT_SELECTED
+}
+
+model CompanyProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  industry    String   @default("")
+  location    String   @default("")
+  website     String   @default("")
+  description String   @default("")
+  verified    Boolean  @default(false)
+}
+
+model CvProfile {
+  id         String         @id @default(cuid())
+  studentId  String         @unique
+  student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  phone      String         @default("")
+  headline   String         @default("")
+  summary    String         @default("")
+  skills     String[]
+  education  Json           @default("[]")
+  experience Json           @default("[]")
+  updatedAt  DateTime       @updatedAt
+}
+
+model PortfolioProject {
+  id          String         @id @default(cuid())
+  studentId   String
+  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  description String         @default("")
+  url         String         @default("")
+  createdAt   DateTime       @default(now())
+}
+
+model Opportunity {
+  id             String          @id @default(cuid())
+  type           OpportunityType
+  posterId       String
+  poster         User            @relation(fields: [posterId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  requiredSkills String[]
+  employmentType EmploymentType?
+  location       String          @default("")
+  deadline       DateTime
+  active         Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+
+  applications   Application[]
+}
+
+model Application {
+  id            String            @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity       @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus @default(UNDER_VERIFICATION)
+  matchScore    Int               @default(0)
+  coverNote     String            @default("")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([opportunityId, studentId])
 }

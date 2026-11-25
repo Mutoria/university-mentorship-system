@@ -21,6 +21,8 @@ import {
   Megaphone,
   BarChart3,
   Sparkles,
+  Briefcase,
+  FileText,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -30,6 +32,9 @@ const navByRole = {
   STUDENT: [
     { label: "Dashboard", href: "/student", icon: LayoutDashboard },
     { label: "AI Match", href: "/student/matches", icon: Sparkles },
+    { label: "My CV", href: "/student/cv", icon: FileText },
+    { label: "Jobs", href: "/student/jobs", icon: Briefcase },
+    { label: "Openings", href: "/student/openings", icon: GraduationCap },
     { label: "Find Mentors", href: "/student/mentors", icon: Search },
     { label: "My Requests", href: "/student/requests", icon: Send },
     { label: "Messages", href: "/student/messages", icon: MessageSquare },
@@ -39,15 +44,23 @@ const navByRole = {
   MENTOR: [
     { label: "Dashboard", href: "/mentor", icon: LayoutDashboard },
     { label: "My Mentees", href: "/mentor/mentees", icon: Users },
+    { label: "Openings", href: "/mentor/openings", icon: Briefcase },
+    { label: "Applicants", href: "/mentor/applicants", icon: Users },
     { label: "Requests", href: "/mentor/requests", icon: Send },
     { label: "Availability", href: "/mentor/availability", icon: CalendarClock },
     { label: "Messages", href: "/mentor/messages", icon: MessageSquare },
     { label: "Profile", href: "/mentor/profile", icon: User },
   ],
+  COMPANY: [
+    { label: "Dashboard", href: "/company", icon: LayoutDashboard },
+    { label: "Post a Job", href: "/company/post", icon: Briefcase },
+    { label: "Applicants", href: "/company/applicants", icon: Users },
+  ],
   ADMIN: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Users", href: "/admin/users", icon: Users },
     { label: "Mentor Verification", href: "/admin/verification", icon: ShieldCheck },
+    { label: "Companies", href: "/admin/companies", icon: Briefcase },
     { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
     { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   ],
@@ -57,7 +70,7 @@ export function DashboardShell({
   role,
   children,
 }: {
-  role: "STUDENT" | "MENTOR" | "ADMIN";
+  role: "STUDENT" | "MENTOR" | "ADMIN" | "COMPANY";
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();

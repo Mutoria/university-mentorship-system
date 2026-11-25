@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, Users, ShieldCheck, ArrowRight } from "lucide-react";
+import { GraduationCap, Users, Building2, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
 const roles = [
@@ -20,10 +20,10 @@ const roles = [
     color: "text-teal-dark bg-teal/10",
   },
   {
-    role: "admin",
-    icon: ShieldCheck,
-    title: "I'm an Administrator",
-    description: "Manage the platform, verify mentors, and review analytics.",
+    role: "company",
+    icon: Building2,
+    title: "I'm a Company",
+    description: "Post jobs, review applicants, and find qualified students.",
     color: "text-gold bg-gold/10",
   },
 ];

@@ -4,13 +4,14 @@ import { prisma } from "@/lib/prisma";
 
 const colors = ["bg-indigo", "bg-teal", "bg-gold", "bg-navy"];
 
-export async function POST(request: Request) {
+async function handle(request: Request) {
   const body = await request.json().catch(() => null);
   const name = String(body?.name ?? "").trim();
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
   const role = String(body?.role ?? "").toUpperCase();
   const department = String(body?.department ?? "").trim();
+  const companyName = String(body?.companyName ?? "").trim();
 
   if (name.length < 2) {
     return NextResponse.json({ error: "Enter your full name" }, { status: 400 });
@@ -24,8 +25,11 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (role !== "STUDENT" && role !== "MENTOR") {
+  if (role !== "STUDENT" && role !== "MENTOR" && role !== "COMPANY") {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+  if (role === "COMPANY" && companyName.length < 2) {
+    return NextResponse.json({ error: "Enter your company name" }, { status: 400 });
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const initials = name
+  const initials = (role === "COMPANY" ? companyName : name)
     .split(/\s+/)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
@@ -59,13 +63,31 @@ export async function POST(request: Request) {
               create: { department: dept, yearOfStudy: "1st Year" },
             },
           }
-        : {
+        : role === "MENTOR"
+        ? {
             mentorProfile: {
               create: { title: "Mentor", department: dept, verified: false },
+            },
+          }
+        : {
+            companyProfile: {
+              create: { companyName, verified: false },
             },
           }),
     },
   });
 
   return NextResponse.json({ success: true });
+}
+
+export async function POST(request: Request) {
+  try {
+    return await handle(request);
+  } catch (error) {
+    console.error("Registration failed:", error);
+    return NextResponse.json(
+      { error: "The database is not responding. Wait a few seconds and try again." },
+      { status: 503 }
+    );
+  }
 }
